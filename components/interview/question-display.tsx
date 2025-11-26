@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, ArrowRight, Send } from "lucide-react"
+import { ArrowLeft, ArrowRight, Mic, MicOff, Send } from "lucide-react"
 import type { InterviewQuestion } from "@/types/interview"
+import { useSpeechRecognition } from "@/hooks/use-speech-recognition"
 
 interface QuestionDisplayProps {
   questions: InterviewQuestion[]
@@ -43,6 +44,12 @@ export const QuestionDisplay = ({ questions, onSubmitAnswers, loading = false }:
   const handleSubmit = () => {
     onSubmitAnswers(answers)
   }
+
+    // Speech hook
+  const { listening, toggle } = useSpeechRecognition((text) => {
+    // Append new text to current answer
+    handleAnswerChange(answers[currentQuestionIndex] + text)
+  })
 
   const isLastQuestion = currentQuestionIndex === questions.length - 1
   const canSubmit = answers.every((answer) => answer.trim().length > 0)
@@ -85,6 +92,7 @@ export const QuestionDisplay = ({ questions, onSubmitAnswers, loading = false }:
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Your Answer</label>
+            <div className="relative">
             <Textarea
               value={answers[currentQuestionIndex]}
               onChange={(e) => handleAnswerChange(e.target.value)}
@@ -92,6 +100,16 @@ export const QuestionDisplay = ({ questions, onSubmitAnswers, loading = false }:
               className="min-h-[120px]"
               disabled={loading}
             />
+            <Button 
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2"
+            onClick={toggle}
+            disabled={loading}
+            >
+              {listening ? <MicOff className="h-4 w-4"/> : <Mic className="h-4 w-4"/>}
+            </Button>
+            </div>
             <p className="text-xs text-muted-foreground">{answers[currentQuestionIndex].length} characters</p>
           </div>
         </CardContent>
