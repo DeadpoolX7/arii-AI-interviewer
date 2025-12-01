@@ -76,7 +76,19 @@ export const Navbar = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* Theme toggle menu */}
+                
+              </>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Link href="/auth/signin">
+                  <Button variant="ghost">Sign In</Button>
+                </Link>
+                <Link href="/auth/signup">
+                  <Button>Get Started</Button>
+                </Link>
+              </div>
+            )}
+            {/* Theme toggle menu  */}
                 <DropdownMenu>
                   <DropdownMenuTrigger>
                     <Button variant="outline" size="icon">
@@ -97,17 +109,6 @@ export const Navbar = () => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Link href="/auth/signin">
-                  <Button variant="ghost">Sign In</Button>
-                </Link>
-                <Link href="/auth/signup">
-                  <Button>Get Started</Button>
-                </Link>
-              </div>
-            )}
           </div>
         </div>
       </div>
