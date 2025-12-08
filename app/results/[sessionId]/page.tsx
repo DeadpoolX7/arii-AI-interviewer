@@ -11,6 +11,7 @@ import { getInterviewSession } from "@/lib/firestore"
 import { ArrowLeft, Download, Share2 } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { toast } from "sonner"
 
 interface ResultsPageProps {
   params: {
@@ -74,6 +75,18 @@ function ResultsContent({ sessionId }: { sessionId: string }) {
   const behavioralAverage =
     behavioralScores.length > 0 ? behavioralScores.reduce((a, b) => a + b, 0) / behavioralScores.length : 0
 
+    const handleShare = () => {
+    const link = `${window.location.origin}/results/${sessionId}`
+    navigator.clipboard.writeText(link).then(
+      () => toast.success("Shareable link copied to clipboard!"),
+      () => toast.error("Failed to copy link.")
+    )
+  }
+
+  const handleExportPDF = () => {
+    window.print()
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -85,11 +98,11 @@ function ResultsContent({ sessionId }: { sessionId: string }) {
         </Link>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleShare}>
             <Share2 className="mr-2 h-4 w-4" />
             Share Results
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExportPDF}>
             <Download className="mr-2 h-4 w-4" />
             Export PDF
           </Button>
