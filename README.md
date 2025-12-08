@@ -25,7 +25,7 @@ A comprehensive AI-powered interview coaching platform that helps users prepare 
 ## Team Members
 - Sanju Shaw
 - Priyanshu Shaw
-- Sayan Dolui
+- Sayan Doloi
 
 ## Project Flow
 1. User uploads resume (PDF)
