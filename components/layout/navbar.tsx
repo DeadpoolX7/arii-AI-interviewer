@@ -33,7 +33,7 @@ export const Navbar = () => {
           <Link href="/" className="flex items-center space-x-2">
             <BarChart3 className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold text-foreground">
-              AI Resume Interviewer
+              Arii - AI Resume Interviewer
             </span>
           </Link>
 
