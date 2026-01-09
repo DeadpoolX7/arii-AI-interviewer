@@ -40,7 +40,7 @@ export default function UploadPage() {
           </div>
 
           <div className="space-y-6">
-            <ResumeUpload onUploadComplete={handleUploadComplete} />
+            {typeof window !== 'undefined' && <ResumeUpload onUploadComplete={handleUploadComplete} />}
 
             {resumeData && (
               <div className="flex justify-end">
