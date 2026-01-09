@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useDropzone } from "react-dropzone"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Upload, FileText, X, CheckCircle } from "lucide-react"
 import { uploadResumeFile } from "@/lib/storage"
-import { extractTextFromPDF, extractTextFallback } from "@/lib/pdf-extractor"
+import { extractTextFromResume, extractTextFallback } from "@/lib/resume-extractor" 
 import { useAuth } from "@/contexts/auth-context"
 
 interface ResumeUploadProps {
@@ -20,65 +20,98 @@ export const ResumeUpload = ({ onUploadComplete }: ResumeUploadProps) => {
   const [uploading, setUploading] = useState(false)
   const [extracting, setExtracting] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [statusText, setStatusText] = useState("")
   const [error, setError] = useState("")
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [isComplete, setIsComplete] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       const file = acceptedFiles[0]
-      if (!file || !user) return
+      if (!file) {
+        setError("No file selected")
+        return
+      }
+      
+      if (!user) {
+        setError("User not authenticated")
+        return
+      }
 
       setError("")
       setUploadedFile(file)
       setUploading(true)
-      setProgress(10)
+      setExtracting(true)
+      setProgress(0)
+      setStatusText("Processing resume...")
+
+      let finalText = ""
 
       try {
-        // Extract text from PDF first
-        setExtracting(true)
+        // Extract text
+        setStatusText("Extracting text from resume...")
         setProgress(30)
+        
+        try {
+          const { text, error: extractError } = await extractTextFromResume(file, (prog, status) => {
+            setProgress(30 + (prog * 0.55))
+            setStatusText(status || "Extracting text...")
+          })
 
-        const { text: resumeText, error: extractError } = await extractTextFromPDF(file)
-        setProgress(60)
-
-        let finalText = resumeText
-        if (extractError || !resumeText.trim()) {
-          console.warn("PDF extraction failed, using fallback:", extractError)
+          if (!extractError && text?.trim()) {
+            finalText = text
+          } else {
+            console.warn("Extraction failed:", extractError)
+            finalText = extractTextFallback(file.name)
+          }
+        } catch (extractErr) {
+          console.warn("Text extraction error:", extractErr)
           finalText = extractTextFallback(file.name)
         }
 
-        // Upload file to Firebase Storage
-        setProgress(80)
+        // Upload to storage
+        setStatusText("Uploading to storage...")
+        setProgress(85)
         const { downloadURL, fileName, error: uploadError } = await uploadResumeFile(file, user.uid)
 
-        if (uploadError || !downloadURL || !fileName) {
-          throw new Error(uploadError || "Upload failed")
+        if (uploadError) {
+          throw new Error(uploadError)
+        }
+
+        if (!downloadURL || !fileName) {
+          throw new Error("Upload failed: missing downloadURL or fileName")
         }
 
         setProgress(100)
         setIsComplete(true)
-
-        // Call the completion callback
+        setExtracting(false)
         onUploadComplete(finalText, fileName, downloadURL)
       } catch (err: any) {
-        setError(err.message || "Failed to process resume")
-      } finally {
+        console.error("Upload process error:", err)
+        setError(err?.message || "Failed to process resume")
         setUploading(false)
         setExtracting(false)
       }
     },
-    [user, onUploadComplete],
+    [user, onUploadComplete]
   )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       "application/pdf": [".pdf"],
+      "image/png": [".png"],
+      "image/jpeg": [".jpg", ".jpeg"],
+      "text/plain": [".txt"],
     },
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024, // 10MB
-    disabled: uploading || isComplete,
+    maxSize: 15 * 1024 * 1024,
+    disabled: uploading || isComplete || !isClient,
   })
 
   const resetUpload = () => {
@@ -86,6 +119,10 @@ export const ResumeUpload = ({ onUploadComplete }: ResumeUploadProps) => {
     setIsComplete(false)
     setProgress(0)
     setError("")
+  }
+
+  if (!isClient) {
+    return null
   }
 
   if (isComplete && uploadedFile) {
@@ -147,10 +184,10 @@ export const ResumeUpload = ({ onUploadComplete }: ResumeUploadProps) => {
           {uploading ? (
             <div className="space-y-4">
               <p className="text-lg font-medium">
-                {extracting ? "Extracting text from PDF..." : "Uploading resume..."}
+                {statusText || "Processing resume..."}
               </p>
               <Progress value={progress} className="w-full max-w-xs mx-auto" />
-              <p className="text-sm text-muted-foreground">{progress}% complete</p>
+              <p className="text-sm text-muted-foreground">{Math.round(progress)}% complete</p>
             </div>
           ) : (
             <div>
@@ -159,7 +196,7 @@ export const ResumeUpload = ({ onUploadComplete }: ResumeUploadProps) => {
               </p>
               <p className="text-muted-foreground mb-4">or click to browse files</p>
               <Button variant="outline">Choose File</Button>
-              <p className="text-xs text-muted-foreground mt-4">Supports PDF files up to 10MB</p>
+              <p className="text-xs text-muted-foreground mt-4">Supports PDF, images, and text files up to 15MB</p>
             </div>
           )}
         </div>

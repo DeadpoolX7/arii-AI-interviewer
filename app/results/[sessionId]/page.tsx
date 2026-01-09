@@ -66,14 +66,14 @@ function ResultsContent({ sessionId }: { sessionId: string }) {
   }
 
   // Calculate averages
-  const technicalScores = session.scores.filter((_, index) => session.questions[index].type === "technical")
-  const behavioralScores = session.scores.filter((_, index) => session.questions[index].type === "behavioral")
+  const technicalScores = session.scores.filter((_: number, index: number) => session.questions[index].type === "technical")
+  const behavioralScores = session.scores.filter((_: number, index: number) => session.questions[index].type === "behavioral")
 
   const technicalAverage =
-    technicalScores.length > 0 ? technicalScores.reduce((a, b) => a + b, 0) / technicalScores.length : 0
+    technicalScores.length > 0 ? technicalScores.reduce((a: number, b: number) => a + b, 0) / technicalScores.length : 0
 
   const behavioralAverage =
-    behavioralScores.length > 0 ? behavioralScores.reduce((a, b) => a + b, 0) / behavioralScores.length : 0
+    behavioralScores.length > 0 ? behavioralScores.reduce((a: number, b: number) => a + b, 0) / behavioralScores.length : 0
 
     const handleShare = () => {
     const link = `${window.location.origin}/results/${sessionId}`
@@ -121,7 +121,7 @@ function ResultsContent({ sessionId }: { sessionId: string }) {
 
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">Question-by-Question Results</h2>
-        {session.questions.map((question, index) => (
+        {session.questions.map((question: any, index: number) => (
           <QuestionResult
             key={question.id}
             question={question.question}

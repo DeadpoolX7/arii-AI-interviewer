@@ -5,7 +5,8 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { AuthProvider } from "@/contexts/auth-context"
 import { Suspense } from "react"
-import  "../styles/globals.css"
+// @ts-ignore: Cannot find module or type declarations for side-effect import of '../styles/globals.css'.
+import "../styles/globals.css"
 
 import { ThemeProvider } from "@/components/theme-provider"
 
